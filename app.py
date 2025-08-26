@@ -1,31 +1,20 @@
 from flask import Flask, request, render_template_string, send_file
 import yt_dlp
 import os
+import tempfile
 
 app = Flask(__name__)
 
-HTML_FORM = """
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Descargador de YouTube</title>
-</head>
-<body style="font-family: Arial; text-align: center; margin-top: 50px;">
-    <h2>🎥 Descargador de YouTube</h2>
-    <form method="POST">
-        <input type="text" name="url" placeholder="Pega el enlace de YouTube" size="50" required>
-        <br><br>
-        <button type="submit">⬇ Descargar Video</button>
-    </form>
-</body>
-</html>
-"""
+HTML_FORM = """ ... """  # Tu HTML aqu�
 
 @app.route("/", methods=["GET", "POST"])
 def index():
     if request.method == "POST":
         url = request.form.get("url")
-        output_file = "%(title)s.%(ext)s"
+
+        # Carpeta temporal
+        temp_dir = tempfile.gettempdir()
+        output_file = os.path.join(temp_dir, "%(title)s.%(ext)s")
 
         ydl_opts = {
             'format': 'best',
@@ -33,11 +22,14 @@ def index():
             'noplaylist': True
         }
 
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=True)
-            nombre_archivo = ydl.prepare_filename(info)
+        try:
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(url, download=True)
+                nombre_archivo = ydl.prepare_filename(info)
 
-        return send_file(nombre_archivo, as_attachment=True)
+            return send_file(nombre_archivo, as_attachment=True)
+        except Exception as e:
+            return f"? Error al descargar el video: {str(e)}"
 
     return render_template_string(HTML_FORM)
 
