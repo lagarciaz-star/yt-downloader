@@ -5,14 +5,31 @@ import tempfile
 
 app = Flask(__name__)
 
-HTML_FORM = """ ... """  # Tu HTML aquí
+HTML_FORM = """
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Descargador de YouTube</title>
+</head>
+<body style="font-family: Arial; text-align: center; margin-top: 50px;">
+    <h2>?? Descargador de YouTube</h2>
+    <form method="POST">
+        <input type="text" name="url" placeholder="Pega el enlace de YouTube" size="50" required>
+        <br><br>
+        <button type="submit">? Descargar Video</button>
+    </form>
+    {% if mensaje %}
+        <p>{{ mensaje }}</p>
+    {% endif %}
+</body>
+</html>
+"""
 
 @app.route("/", methods=["GET", "POST"])
 def index():
+    mensaje = None
     if request.method == "POST":
         url = request.form.get("url")
-
-        # Carpeta temporal
         temp_dir = tempfile.gettempdir()
         output_file = os.path.join(temp_dir, "%(title)s.%(ext)s")
 
@@ -29,9 +46,9 @@ def index():
 
             return send_file(nombre_archivo, as_attachment=True)
         except Exception as e:
-            return f"? Error al descargar el video: {str(e)}"
+            mensaje = f"? Error al descargar el video: {str(e)}"
 
-    return render_template_string(HTML_FORM)
+    return render_template_string(HTML_FORM, mensaje=mensaje)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
